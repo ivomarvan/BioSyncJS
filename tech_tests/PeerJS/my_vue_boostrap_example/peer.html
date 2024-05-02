@@ -2,194 +2,188 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PeerJS Example with vue.js and boostrap</title>
-  <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeerJS Example with vue.js and boostrap</title>
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">-->
 
-  <!-- Nejnovější kompilovaný a minimalizovaný CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Nejnovější kompilovaný a minimalizovaný CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31"></script>
-  <!-- produkční verze: <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js"></script> -->
-  <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
-  <style>
-    .equal-width {
-      width: 10em;
-      /* Zvolte šířku podle nejširšího tlačítka */
-    }
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31"></script>
+    <!-- produkční verze: <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js"></script> -->
+    <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+    <style>
+        .equal-width {
+            width: 10em;
+            /* Zvolte šířku podle nejširšího tlačítka */
+        }
 
-    .card {
-      margin-top: 0;
-      /* Odstraňuje vertikální okraje mezi kartami */
-      margin-bottom: 0;
-    }
-  </style>
+        .card {
+            margin-top: 0;
+            /* Odstraňuje vertikální okraje mezi kartami */
+            margin-bottom: 0;
+        }
+    </style>
 
 </head>
 
 <body>
-  <div id="app" class="container py-5">
+<div id="app" class="container py-5">
     <nav class="navbar navbar-dark bg-primary d-flex justify-content-center">
-      <span class="navbar-brand mb-0 h1">PeerJS example - peer: <strong>{{ name }}</strong></span>
+        <span class="navbar-brand mb-0 h1">PeerJS example - peer: <strong>{{ name }}</strong></span>
     </nav>
 
     <!-- Connection Panel -->
     <div class="card mt-0">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Connection</strong>
-        <div>
-          <button class="btn btn-primary equal-width" @click="connect" v-if="!isConnected">Connect</button>
-          <button class="btn btn-danger equal-width" @click="connect" v-else>Disconnect</button>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Connection</strong>
+            <div>
+                <button class="btn btn-primary equal-width" @click="connect" v-if="!isConnected">Connect</button>
+                <button class="btn btn-danger equal-width" @click="disconnect" v-else>Disconnect</button>
+            </div>
         </div>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <!-- První sloupec pro My ID -->
-          <div class="col-md-4">
-            <label for="myId" class="form-label">My ID</label>
-            <input type="text" class="form-control" id="myId" v-model="myId" readonly>
-          </div>
-          <!-- Druhý sloupec pro Partner's ID -->
-          <div class="col-md-4">
-            <label for="partnerId" class="form-label">Partner's ID</label>
-            <input type="text" class="form-control" id="partnerId" v-model="partnerId">
-          </div>
-          <!-- Třetí sloupec pro Status -->
-          <div class="col-md-4">
-            <label for="status" class="form-label">Status</label>
-            <input type="text" class="form-control" id="status" v-model="status" readonly>
-          </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- První sloupec pro My ID -->
+                <div class="col-md-4">
+                    <label for="myId" class="form-label">My ID</label>
+                    <input type="text" class="form-control" id="myId" v-model="myId" readonly>
+                </div>
+                <!-- Druhý sloupec pro Partner's ID -->
+                <div class="col-md-4">
+                    <label for="partnerId" class="form-label">Partner's ID</label>
+                    <input type="text" class="form-control" id="partnerId" v-model="partnerId">
+                </div>
+                <!-- Třetí sloupec pro Status -->
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Status</label>
+                    <input type="text" class="form-control" id="status" v-model="status" readonly>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <!-- Send Message Panel -->
     <div class="card mt-0">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Message to send</strong>
-        <button class="btn btn-primary equal-width" @click="sendMessage" :disabled="!isConnected">Send</button>
-      </div>
-      <div class="card-body">
-        <input type="text" class="form-control" id="messageToSend" v-model="message"
-          placeholder="Type your message here...">
-      </div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Message to send</strong>
+            <button class="btn btn-primary equal-width" @click="getMessageAndSend" :disabled="!isConnected">Send
+            </button>
+        </div>
+        <div class="card-body">
+            <input type="text" class="form-control" id="messageToSend" v-model="message"
+                    placeholder="Type your message here..." @keyup.enter="getMessageAndSend">
+
+        </div>
     </div>
 
     <!-- Received Messages Panel -->
     <div class="card mt-0 mb-0"> <!-- Odebrány marginy nahoře a dole -->
-      <div class="card-header">
-        <strong>Received messages</strong>
-      </div>
-      <div class="card-body">
-        <div v-for="msg in receivedMessages" :key="msg.time" class="mb-1"> <!-- Menší mezery mezi zprávami -->
-          <span class="badge rounded-pill badge-primary">{{ msg.time }}</span>
-          <span :class="['badge rounded-pill', msg.sender ? 'badge-success' : 'badge-warning']">
-            {{ msg.sender ? 'Me' : 'Them' }}
-          </span>
-          <span>{{ msg.message }}</span>
+        <div class="card-header">
+            <strong>Received messages</strong>
         </div>
-      </div>
+        <div class="card-body">
+            <div v-for="msg in receivedMessages" :key="msg.created" class="mb-1"> <!-- Menší mezery mezi zprávami -->
+                <span class="badge rounded-pill badge-primary">{{ msg.created }}</span>&nbsp;
+                <span :class="['badge rounded-pill', (msg.sender==this.name) ? 'badge-success' : 'badge-warning']">
+                    {{ msg.sender}}
+                </span>:&nbsp;
+                <span>{{ msg.message }}</span>
+            </div>
+        </div>
     </div>
 
+</div>
 
-  </div>
-
-  <script>
-    const { createApp } = Vue;
+<script>
+    const {createApp} = Vue;
     createApp({
-      data() {
-        return {
-          myId: '',
-          partnerId: '',
-          message: '',
-          status: 'Disconnected',  // Opraveno na správný výchozí text
-          receivedMessages: [],
-          peer: null,
-          conn: null,
-          isConnected: false
-        };
-      },
-      created() {
-        const urlParams = new URLSearchParams(window.location.search);
-        this.myId = urlParams.get('my_id') || "10001";
-        this.partnerId = urlParams.get('partner_id') || "10002";
-        const nameParam = urlParams.get('name');
-        this.name = nameParam ? nameParam : "Unknown";
+        data() {
+            return {
+                myId: '',
+                partnerId: '',
+                message: '',
+                status: 'Disconnected',  // Opraveno na správný výchozí text
+                receivedMessages: [],
+                peer: null,
+                conn: null,
+                isConnected: false
+            };
+        },
+        created() {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.myId = urlParams.get('my_id') || "10001";
+            this.partnerId = urlParams.get('partner_id') || "10002";
+            const nameParam = urlParams.get('name');
+            this.name = nameParam ? nameParam : "Unknown";
 
-        this.peer = new Peer(this.myId);
+            this.peer = new Peer(this.myId);
 
-        this.peer.on('connection', conn => {
-          this.conn = conn;
-          this.handleConnection();
-        });
-      },
-      methods: {
-        connect() {
-          if (!this.isConnected && this.partnerId) {
-            this.conn = this.peer.connect(this.partnerId);
-            if (this.conn) {
-              this.handleConnection();
-            } else {
-              console.error('Connection failed to establish.');
-              this.status = 'Connection failed';
-            }
-          }
-        },
-        disconnect() {
-          if (this.conn) {
-            this.conn.close();
-            this.conn = null;
-            this.isConnected = false;
-            this.status = 'Disconnected';
-          }
-        },
-        handleConnection() {
-          this.conn.on('open', () => {
-            this.isConnected = true;
-            this.status = `Connected to: ${this.conn.peer}`;
-          });
-          this.conn.on('data', (data) => {
-            const currentTime = new Date().toTimeString().split(" ")[0];
-            const receivedMessage = `${currentTime} - Received: ${data}`;
-            this.receivedMessages.push({ message: receivedMessage, sender: false });
-          });
-          this.conn.on('close', () => {
-            this.isConnected = false;
-            this.status = 'Disconnected';
-            this.conn = null;
-          });
-          this.conn.on('error', (err) => {
-            this.isConnected = false;
-            this.status = `Connection failed: ${err}`;
-          });
-        },
-        receiveMessage(text) {
-          const currentTime = new Date().toTimeString().split(" ")[0];
-          this.receivedMessages.push({
-            time: currentTime,
-            message: text,
-            sender: false  // Předpokládá, že zpráva přichází od ostatních
-          });
-        },
-        sendMessage() {
-          if (this.isConnected && this.message.trim() !== '') {
-            const currentTime = new Date().toTimeString().split(" ")[0];
-            const message = `${currentTime} - Me: ${this.message}`;
-            this.conn.send(message);  // Odeslání zprávy
-            this.receivedMessages.push({  // Lokální uložení zprávy
-              time: currentTime,
-              message: this.message,
-              sender: true
+            this.peer.on('connection', conn => {
+                this.conn = conn;
+                this.handleConnection();
             });
-            this.message = '';
-          } else {
-            alert('Message is empty or connection is not established. Please connect and enter a message.');
-          }
+        },
+        methods: {
+            connect() {
+                if (!this.isConnected && this.partnerId) {
+                    this.conn = this.peer.connect(this.partnerId);
+                    if (this.conn) {
+                        this.handleConnection();
+                    } else {
+                        console.error('Connection failed to establish.');
+                        this.status = 'Connection failed';
+                    }
+                }
+            },
+            disconnect() {
+                if (this.conn) {
+                    this.conn.close();
+                    this.conn = null;
+                    this.isConnected = false;
+                    this.status = 'Disconnected';
+                }
+            },
+            handleConnection() {
+                this.conn.on('open', () => {
+                    this.isConnected = true;
+                    this.status = `Connected to: ${this.conn.peer}`;
+                });
+                this.conn.on('data', (data) => {
+                    const messageObj = JSON.parse(data);
+                    this.receivedMessages.push(messageObj);
+                });
+                this.conn.on('close', () => {
+                    this.isConnected = false;
+                    this.status = 'Disconnected';
+                    this.conn = null;
+                });
+                this.conn.on('error', (err) => {
+                    this.isConnected = false;
+                    this.status = `Connection failed: ${err}`;
+                });
+            },
+            getMessageAndSend() {
+                if (this.isConnected && this.message.trim() !== '') {
+                    this.sendMessage({
+                        created: new Date().toTimeString().split(" ")[0],
+                        sender: this.name,
+                        message: this.message
+                    });
+                    this.message = '';
+                } else {
+                    alert('Message is empty or connection is not established. Please connect and enter a message.');
+                }
+            },
+            sendMessage(messageObj) {
+                this.receivedMessages.push(messageObj);  //
+                this.conn.send(JSON.stringify(messageObj));  // Odeslání zprávy jako JSON string
+            },
+
         }
-      }
     }).mount('#app');
-  </script>
+</script>
 </body>
 
 </html>
