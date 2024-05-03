@@ -69,7 +69,8 @@ createApp({
                 this.sendMessage({
                     created: new Date().toTimeString().split(" ")[0],
                     sender: this.name,
-                    message: this.message
+                    message: this.message,
+                    type: 'short_message'
                 });
                 this.message = '';
             } else {
@@ -80,11 +81,15 @@ createApp({
             this.receivedMessages.push(messageObj);
             this.conn.send(JSON.stringify(messageObj));  // Sends the message as a JSON string
         },
-        getSeed() {
-            // Vrací seed; může být pevně nastavený, nebo generován dynamicky
-            return '12345';  // Příklad statického seedu
+        getSeed(length) {
+            let result = '';
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
         },
-
         genMessageForTest(seed, requested_sizeKB) {
             // Vytvoří zprávu délky sizeKB pro daný seed
             const sizeInBytes = requested_sizeKB * 1024;
@@ -103,18 +108,22 @@ createApp({
 
             const messageObject = {
                 actual_len: messageText.length,  // Zde by mělo být opraveno na správnou délku, aktuálně je to počet znaků
-                type: 'test_message',
                 created: created,
-                message: messageText
+                message: messageText,
+                type: 'long_message'
             };
 
+            return messageObject;
+        },
+        getLongMmsgAsString(requested_sizeKB) {
+            const messageObject = getMessageObject(requested_sizeKB);
             // Generujeme JSON a následně nahradíme placeholder správnou délkou
             let jsonString = JSON.stringify(messageObject);
             const lengthPlaceholder = '<length_placeholder>';
             jsonString = jsonString.replace(lengthPlaceholder, String(jsonString.length + lengthPlaceholder.length).padStart(lengthPlaceholder.length, '0'));
 
             return jsonString;
-        },
+        }
 
     }
 }).mount('#app');
