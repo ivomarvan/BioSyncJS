@@ -15,7 +15,7 @@
   <div class="card mt-4">
     <div class="card-header">Run two instance in two windows</div>
     <div class="card-body">
-      <button onclick="openWindows()" type="button" class="btn btn-success" data-mdb-ripple-init>Run</button>
+      <button onclick="openWindows()" type="button" class="btn btn-success" data-mdb-ripple-init>Open two peers in two windows</button>
     </div>
   </div>
 
@@ -31,9 +31,10 @@ function generateId() {
 function openWindows() {
   const id1 = generateId();
   const id2 = generateId();
-  
-  window.open(`./peer.html?my_id=${id1}&partner_id=${id2}&name=A`, '_blank');
-  window.location.href = `./peer.html?my_id=${id2}&partner_id=${id1}&name=B`;
+  // const url = "./peer.html";
+  const url = "index_one_peer.html";
+  window.open(`${url}?my_id=${id1}&partner_id=${id2}&name=A`, '_blank');
+  window.location.href = `${url}?my_id=${id2}&partner_id=${id1}&name=B`;
 }
 </script>
 </body>
