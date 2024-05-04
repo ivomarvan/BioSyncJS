@@ -47,12 +47,12 @@
     <div class="card mt-0">
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Message to send</strong>
-            <button class="btn btn-primary equal-width" @click="getMessageAndSend" :disabled="!isConnected">Send <strong>text</strong>
+            <button class="btn btn-primary equal-width" @click="getAndSendShortMessage" :disabled="!isConnected">Send <strong>text</strong>
             </button>
         </div>
         <div class="card-body">
             <input type="text" class="form-control" id="messageToSend" v-model="message"
-                   placeholder="Type your message here..." @keyup.enter="getMessageAndSend">
+                   placeholder="Type your message here..." @keyup.enter="getAndSendLongMessage">
         </div>
     </div>
 
@@ -78,46 +78,47 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Speed/Latency Test</strong>
             <div>
-                <input type="number" class="form-control" id="messageSize" v-model="messageSize"
+                <input type="number" class="form-control" id="longMessageSize" v-model="longMessageSize"
                        placeholder="Enter size" style="width: auto; display: inline-block;">
-                <label for="messageSize" class="mx-2">KB</label>
-                <button class="btn btn-primary" @click="sendTestMessage" :disabled="!isConnected">Send <strong>test</strong></button>
+                <label for="longMessageSize" class="mx-2">KB</label>
+                <button class="btn btn-primary" @click="getAndSendLongMessage" :disabled="!isConnected">Send <strong>test</strong></button>
             </div>
         </div>
         <div class="card-body p-0">
             <table class="table mb-0">
                 <thead>
                 <tr>
-                    <th>Message/s</th>
+                    <th><span class="count">{{stats.count}}</span>. messages</th>
                     <th>Speed [KB/s]</th>
                     <th>Latency [ms]</th>
                     <th>Correctly</th>
                 </tr>
                 </thead>
+
                 <tbody>
                 <tr>
                     <th>Last</th>
-                    <td>{{ lastSpeed }}</td>
-                    <td>{{ lastLatency }}</td>
-                    <td>{{ lastCorrect ? 'Yes' : 'No' }}</td>
+                    <td>{{ stats.last.speed }}</td>
+                    <td>{{ stats.last.latency }}</td>
+                    <td>{{ stats.last.correct ? 'Yes' : 'No' }}</td>
                 </tr>
                 <tr>
                     <th>Avg</th>
-                    <td>{{ avgSpeed }}</td>
-                    <td>{{ avgLatency }}</td>
-                    <td>{{ avgCorrectPercents}}</td>
+                    <td>{{ stats.avg.speed }}</td>
+                    <td>{{ stats.avg.latency }}</td>
+                    <td>{{ stats.avg.correctPct}}</td>
                 </tr>
                 <tr>
                     <th>Min</th>
-                    <td>{{ minSpeed }}</td>
-                    <td>{{ minLatency }}</td>
+                    <td>{{ stats.min.speed }}</td>
+                    <td>{{ stats.min.latency }}</td>
                     <td>-</td>
                 </tr>
                 <tr>
                     <th>Max</th>
-                    <td>{{ maxSpeed }}</td>
-                    <td>{{ maxLatency }}</td>
-                    <td></td>
+                    <td>{{ stats.max.speed }}</td>
+                    <td>{{ stats.max.latency }}</td>
+                    <td>-</td>
                 </tr>
                 </tbody>
             </table>
@@ -126,6 +127,7 @@
 
 
 </div>
+<script src="messages.js"></script>
 <script src="peer.js"></script>
 </body>
 </html>

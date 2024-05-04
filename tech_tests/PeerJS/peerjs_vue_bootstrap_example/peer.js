@@ -9,7 +9,31 @@ createApp({
             receivedMessages: [],
             peer: null,
             conn: null,
-            isConnected: false
+            longMessageSize: 1,  // in KB
+            isConnected: false,
+            // statistics
+            stats: {
+                count: 0,
+                last: {
+                    speed: '',
+                    latency: '',
+                    correct: ''
+                },
+                min: {
+                    speed: '',
+                    latency: '',
+
+                },
+                avg: {
+                    speed: '',
+                    latency: '',
+                    correctPct: ''
+                },
+                max: {
+                    speed: '',
+                    latency: ''
+                }
+            },
         };
     },
     created() {
@@ -51,8 +75,12 @@ createApp({
                 this.status = `Connected to: ${this.conn.peer}`;
             });
             this.conn.on('data', (data) => {
-                const messageObj = JSON.parse(data);
-                this.receivedMessages.push(messageObj);
+                const messageObj = Messages.getDeserialized(data);
+                if (messageObj.type === 'long_message') {
+                    this.receiveLongMessage(messageObj);
+                } else {
+                    this.storeShortMessage(messageObj);
+                }
             });
             this.conn.on('close', () => {
                 this.isConnected = false;
@@ -64,66 +92,65 @@ createApp({
                 this.status = `Connection failed: ${err}`;
             });
         },
-        getMessageAndSend() {
+        storeShortMessage(messageObj) {
+            messageObj.created = messageObj.created.toLocaleTimeString();
+            this.receivedMessages.push(messageObj);
+        },
+        getAndSendShortMessage() {
             if (this.isConnected && this.message.trim() !== '') {
-                this.sendMessage({
-                    created: new Date().toTimeString().split(" ")[0],
-                    sender: this.name,
-                    message: this.message,
-                    type: 'short_message'
-                });
+                this.sendShortMessage(this.message);
                 this.message = '';
             } else {
                 alert('Message is empty or connection is not established. Please connect and enter a message.');
             }
         },
-        sendMessage(messageObj) {
-            this.receivedMessages.push(messageObj);
-            this.conn.send(JSON.stringify(messageObj));  // Sends the message as a JSON string
+        sendShortMessage(messageStr) {
+            const messageObj = Messages.getShortMsgObj(messageStr, this.name);
+            const msgStr = Messages.getSerialized(messageObj);
+            this.conn.send(msgStr);  // Sends the message as a JSON string
+            this.storeShortMessage(messageObj);
         },
-        getSeed(length) {
-            let result = '';
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            const charactersLength = characters.length;
-            for (let i = 0; i < length; i++) {
-                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        getAndSendLongMessage() {
+            const messageObj = Messages.getLongMsgObj(this.longMessageSize, this.name);
+            this.conn.send(Messages.getSerialized(messageObj));  // Sends the message as a JSON string
+            this.storeShortMessage({
+                sender: this.name,
+                message: `Long message of ${this.longMessageSize} KB sent`,
+                created: new Date()
+            });
+        },
+        receiveLongMessage(messageObj) {
+            this.stats.count++;
+            const time_diff = new Date() - messageObj.created;
+            const controlStr = Messages.genTxtForTest(messageObj.seed, messageObj.requested_KB);
+            const correct = messageObj.message === controlStr;
+            // time in ms, length in bytes, speed in KB/s
+            this.stats.last.speed = (messageObj.message.length / time_diff).toFixed(2);
+            this.stats.last.latency = time_diff;
+            this.stats.last.correct = correct ? 'Yes' : 'No';
+            if (this.stats.min.speed === '' || this.stats.min.speed > this.stats.last.speed) {
+                this.stats.min.speed = this.stats.last.speed;
             }
-            return result;
-        },
-        genMessageForTest(seed, requested_sizeKB) {
-            // Vytvoří zprávu délky sizeKB pro daný seed
-            const sizeInBytes = requested_sizeKB * 1024;
-            let result = '';
-            const seedLength = seed.length;
-            while (result.length < sizeInBytes) {
-                result += seed.repeat(Math.ceil((sizeInBytes - result.length) / seedLength)).slice(0, sizeInBytes - result.length);
+            if (this.stats.min.latency === '' || this.stats.min.latency > this.stats.last.latency) {
+                this.stats.min.latency = this.stats.last.latency;
             }
-            return result;
-        },
-
-        getMessageObject(requested_sizeKB) {
-            const seed = getSeed();
-            const messageText = genMessageForTest(seed, requested_sizeKB);
-            const created = new Date().toISOString(); // ISO format pro snadnou manipulaci a zobrazení
-
-            const messageObject = {
-                actual_len: messageText.length,  // Zde by mělo být opraveno na správnou délku, aktuálně je to počet znaků
-                created: created,
-                message: messageText,
-                type: 'long_message'
-            };
-
-            return messageObject;
-        },
-        getLongMmsgAsString(requested_sizeKB) {
-            const messageObject = getMessageObject(requested_sizeKB);
-            // Generujeme JSON a následně nahradíme placeholder správnou délkou
-            let jsonString = JSON.stringify(messageObject);
-            const lengthPlaceholder = '<length_placeholder>';
-            jsonString = jsonString.replace(lengthPlaceholder, String(jsonString.length + lengthPlaceholder.length).padStart(lengthPlaceholder.length, '0'));
-
-            return jsonString;
+            if (this.stats.max.speed === '' || this.stats.max.speed < this.stats.last.speed) {
+                this.stats.max.speed = this.stats.last.speed;
+            }
+            if (this.stats.max.latency === '' || this.stats.max.latency < this.stats.last.latency) {
+                this.stats.max.latency = this.stats.last.latency;
+            }
+            if (this.stats.count === 1) {
+                this.stats.avg.speed = this.stats.last.speed;
+                this.stats.avg.latency = this.stats.last.latency;
+                this.stats.avg.correctPct = correct ? 100 : 0;
+            } else {
+                this.stats.avg.speed = (this.stats.avg.speed * (this.stats.count - 1) + this.stats.last.speed) / this.stats.count;
+                this.stats.avg.latency = (this.stats.avg.latency * (this.stats.count - 1) + this.stats.last.latency) / this.stats.count;
+                this.stats.avg.correctPct = (this.stats.avg.correctPct * (this.stats.count - 1) + (correct ? 100 : 0)) / this.stats.count;
+            }
+            messageObj.message = `Long message of ${messageObj.requested_KB} KB received`;
+            this.storeShortMessage(messageObj);
         }
-
     }
 }).mount('#app');
