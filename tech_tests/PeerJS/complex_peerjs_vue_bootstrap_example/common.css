@@ -5,9 +5,34 @@
 
 .navbar {
     background-color: #343a40; /* tmavě šedá barva */
+    margin-bottom: 20px; /* Spacing between navbar and content */
+}
+
+.card {
+    margin-top: 0; /* Removes vertical margins between cards */
+    margin-bottom: 20px; /* Adds slight bottom margin for better spacing */
 }
 
 .card-title {
     font-weight: bold;
     font-style: italic;
+}
+
+
+.equal-width {
+    width: auto; /* Flexible width for buttons */
+}
+
+@media (max-width: 768px) {
+    .form-label {
+        font-size: 14px; /* Smaller labels for small screens */
+    }
+
+    .form-control {
+        font-size: 14px; /* Smaller input text for better readability */
+    }
+
+    .card-header, .card-body {
+        padding: 10px; /* Reduced padding for better space utilization */
+    }
 }

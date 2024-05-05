@@ -42,20 +42,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Send Message Panel -->
-    <div class="card mt-0">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Message to send</strong>
-            <button class="btn btn-primary equal-width" @click="getAndSendShortMessage" :disabled="!isConnected">Send <strong>text</strong>
-            </button>
-        </div>
-        <div class="card-body">
-            <input type="text" class="form-control" id="messageToSend" v-model="message"
-                   placeholder="Type your message here..." @keyup.enter="getAndSendLongMessage">
-        </div>
-    </div>
-
     <!-- Received Messages Panel -->
     <div class="card mt-0 mb-0">
         <div class="card-header">
@@ -71,6 +57,59 @@
             </div>
         </div>
     </div>
+
+    <!-- Speed/Latency Test Panel -->
+    <div class="card mt-0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Speed/Latency Test</strong>
+            <div>
+                <input type="number" class="form-control" id="longMessageSize" v-model="longMessageSize"
+                       placeholder="Enter size" style="width: auto; display: inline-block;">
+                <label for="longMessageSize" class="mx-2">KB</label>
+                <button class="btn btn-primary" @click="getAndSendLongMessage" :disabled="!isConnected">Send <strong>test</strong></button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <table class="table mb-0">
+                <thead>
+                <tr>
+                    <th><span class="count">{{stats.count}}</span>. messages</th>
+                    <th>Speed [KB/s]</th>
+                    <th>Latency [ms]</th>
+                    <th>Correctness [%]</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr>
+                    <th>Last</th>
+                    <td>{{ stats.last.speed }}</td>
+                    <td>{{ stats.last.latency }}</td>
+                    <td>{{ stats.last.correct ? 100 : 0 }}</td>
+                </tr>
+                <tr>
+                    <th>Avg</th>
+                    <td>{{ stats.avg.speed }}</td>
+                    <td>{{ stats.avg.latency }}</td>
+                    <td>{{ stats.avg.correctPct}}</td>
+                </tr>
+                <tr>
+                    <th>Min</th>
+                    <td>{{ stats.min.speed }}</td>
+                    <td>{{ stats.min.latency }}</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <th>Max</th>
+                    <td>{{ stats.max.speed }}</td>
+                    <td>{{ stats.max.latency }}</td>
+                    <td>-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 
 </div>
 <script src="messages.js"></script>
