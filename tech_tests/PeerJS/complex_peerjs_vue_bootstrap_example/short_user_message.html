@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeerJS Example with Vue.js and Bootstrap</title>
+    <!-- Latest compiled and minified Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31"></script>
+    <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="peer.css">
+</head>
+<body>
+<div id="app" class="container py-5">
+    <nav class="navbar navbar-dark bg-primary d-flex justify-content-center">
+        <span class="navbar-brand mb-0 h1">PeerJS example - peer: <strong>{{ name }}</strong></span>
+    </nav>
+
+    <!-- Connection Panel -->
+    <div class="card mt-0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Connection</strong>
+            <div>
+                <button class="btn btn-primary equal-width" @click="connect" v-if="!isConnected">Connect</button>
+                <button class="btn btn-danger equal-width" @click="disconnect" v-else>Disconnect</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="myId" class="form-label">My ID</label>
+                    <input type="text" class="form-control" id="myId" v-model="myId" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label for="partnerId" class="form-label">Partner's ID</label>
+                    <input type="text" class="form-control" id="partnerId" v-model="partnerId">
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Status</label>
+                    <input type="text" class="form-control" id="status" v-model="status" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Message Panel -->
+    <div class="card mt-0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Message to send</strong>
+            <button class="btn btn-primary equal-width" @click="getAndSendShortMessage" :disabled="!isConnected">Send <strong>text</strong>
+            </button>
+        </div>
+        <div class="card-body">
+            <input type="text" class="form-control" id="messageToSend" v-model="message"
+                   placeholder="Type your message here..." @keyup.enter="getAndSendLongMessage">
+        </div>
+    </div>
+
+    <!-- Received Messages Panel -->
+    <div class="card mt-0 mb-0">
+        <div class="card-header">
+            <strong>Received messages</strong>
+        </div>
+        <div class="card-body">
+            <div v-for="msg in receivedMessages" :key="msg.created" class="mb-1">
+                <span class="badge rounded-pill badge-primary">{{ msg.created }}</span>&nbsp;
+                <span :class="['badge rounded-pill', (msg.sender==this.name) ? 'badge-success' : 'badge-warning']">
+                    {{ msg.sender }}
+                </span>:&nbsp;
+                <span>{{ msg.message }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Speed/Latency Test Panel -->
+    <!-- Speed/Latency Test Panel -->
+    <div class="card mt-0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Speed/Latency Test</strong>
+            <div>
+                <input type="number" class="form-control" id="longMessageSize" v-model="longMessageSize"
+                       placeholder="Enter size" style="width: auto; display: inline-block;">
+                <label for="longMessageSize" class="mx-2">KB</label>
+                <button class="btn btn-primary" @click="getAndSendLongMessage" :disabled="!isConnected">Send <strong>test</strong></button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <table class="table mb-0">
+                <thead>
+                <tr>
+                    <th><span class="count">{{stats.count}}</span>. messages</th>
+                    <th>Speed [KB/s]</th>
+                    <th>Latency [ms]</th>
+                    <th>Correctly</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr>
+                    <th>Last</th>
+                    <td>{{ stats.last.speed }}</td>
+                    <td>{{ stats.last.latency }}</td>
+                    <td>{{ stats.last.correct ? 'Yes' : 'No' }}</td>
+                </tr>
+                <tr>
+                    <th>Avg</th>
+                    <td>{{ stats.avg.speed }}</td>
+                    <td>{{ stats.avg.latency }}</td>
+                    <td>{{ stats.avg.correctPct}}</td>
+                </tr>
+                <tr>
+                    <th>Min</th>
+                    <td>{{ stats.min.speed }}</td>
+                    <td>{{ stats.min.latency }}</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <th>Max</th>
+                    <td>{{ stats.max.speed }}</td>
+                    <td>{{ stats.max.latency }}</td>
+                    <td>-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+<script src="messages.js"></script>
+<script src="peer.js"></script>
+</body>
+</html>

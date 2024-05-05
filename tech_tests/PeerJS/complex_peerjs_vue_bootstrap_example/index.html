@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launcher of Examples with PeerJS</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="common.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicons/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicons/android-chrome-512x512.png">
+    <link rel="manifest" href="favicons/site.webmanifest">
+
+</head>
+<body>
+<div id="app" class="container p-3">
+    <nav class="navbar navbar-dark">
+        <img src="favicons/android-chrome-192x192.png" width="30" height="30" class="d-inline-block align-top mr-3"
+             alt="PeerJS Examples Launcher">
+        <span class="navbar-brand mb-0 h1 flex-grow-1 text-center"><i class="fas fa-satellite-dish"></i>PeerJS Examples Launcher</span>
+    </nav>
+
+    <div class="card mt-3 bg-primary text-white">
+        <div class="card-body">
+            <h5 class="card-title">First Peer</h5>
+            <div class="mb-3">
+                <label for="firstPeerId" class="form-label">ID</label>
+                <input type="text" class="form-control" id="firstPeerId" v-model="firstPeer.id">
+            </div>
+            <div class="mb-3">
+                <label for="firstPeerName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="firstPeerName" v-model="firstPeer.name">
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="firstPeerAutoRun" v-model="firstPeer.peerAutoRun"
+                       checked>
+                <label class="form-check-label" for="firstPeerAutoRun">Peer() autorun</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="firstPeerConnectionAutoRun"
+                       v-model="firstPeer.connectionAutoRun" checked>
+                <label class="form-check-label" for="firstPeerConnectionAutoRun">Connection autorun</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3 bg-success text-white">
+        <div class="card-body">
+            <h5 class="card-title">Second Peer</h5>
+            <div class="mb-3">
+                <label for="secondPeerId" class="form-label">ID</label>
+                <input type="text" class="form-control" id="secondPeerId" v-model="secondPeer.id">
+            </div>
+            <div class="mb-3">
+                <label for="secondPeerName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="secondPeerName" v-model="secondPeer.name">
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="secondPeerAutoRun" v-model="secondPeer.peerAutoRun"
+                       checked>
+                <label class="form-check-label" for="secondPeerAutoRun">Peer() autorun</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="secondPeerConnectionAutoRun"
+                       v-model="secondPeer.connectionAutoRun" checked>
+                <label class="form-check-label" for="secondPeerConnectionAutoRun">Connection autorun</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Examples</h5>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="example" id="shortMessages"
+                       value="short_user_message.html" v-model="selectedExample" checked>
+                <label class="form-check-label" for="shortMessages">User-generated short messages</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="example" id="speedTest"
+                       value="speed_latency_test.html"
+                       v-model="selectedExample">
+                <label class="form-check-label" for="speedTest">Speed and connection test (automatically generated text
+                    messages of a given length)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="example" id="videoExample" value="video.html"
+                       v-model="selectedExample">
+                <label class="form-check-label" for="videoExample">Video</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="example" id="faceLandmarks"
+                       value="face_landmarks.html" v-model="selectedExample">
+                <label class="form-check-label" for="faceLandmarks">Face Landmarks (MediaPipe lib.)</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Start Examples in New Windows</h5>
+            <div class="d-flex flex-column flex-md-row justify-content-between">
+                <button class="btn mb-2 mb-md-0" style="background: linear-gradient(to right, #007bff 50%, #28a745 50%)"
+                        @click="startBoth">Both Peers
+                </button>
+                <button class="btn btn-primary mb-2 mb-md-0" @click="startFirst">First Peer</button>
+                <button class="btn btn-success" @click="startSecond">Second Peer</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.2.22/dist/vue.global.prod.js"></script>
+<script>
+    const {createApp} = Vue;
+    createApp({
+        data() {
+            return {
+                firstPeer: {
+                    id: this.generateId(),
+                    name: 'A',
+                    peerAutoRun: true,
+                    connectionAutoRun: true
+                },
+                secondPeer: {
+                    id: this.generateId(),
+                    name: 'B',
+                    peerAutoRun: true,
+                    connectionAutoRun: true
+                },
+                selectedExample: 'short_user_message.html'  // default selection
+            };
+        },
+        methods: {
+            startFirst() {
+                this.openInNewWindow(false, true, this.selectedExample, this.firstPeer, this.secondPeer);
+            },
+            startSecond() {
+                this.openInNewWindow(false, false, this.selectedExample, this.secondPeer, this.firstPeer);
+            },
+            startBoth() {
+                console.log('Start both');
+                this.openInNewWindow(true, true, this.selectedExample, this.firstPeer, this.secondPeer);
+                this.openInNewWindow(false, false, this.selectedExample, this.secondPeer, this.firstPeer);
+            },
+            generateId() {
+                return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                )
+            },
+            openInNewWindow(inTheWindow, isFirst, url, p1, p2) {
+                const pear_auto = p1.peerAutoRun ? 1 : 0;
+                const conn_auto = p1.connectionAutoRun ? 1 : 0;
+                const is_first = isFirst ? 1 : 0;
+                const urlToOpen = `${url}?is_first=${is_first}&my_id=${p1.id}&partner_id=${p2.id}&name=${p1.name}`
+                    + `&pear_auto=${pear_auto}&conn_auto=${conn_auto}`
+                // alert(urlToOpen);
+                if (inTheWindow) {
+                    window.location.href = urlToOpen
+                } else {
+                    window.open(urlToOpen, '_blank');
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

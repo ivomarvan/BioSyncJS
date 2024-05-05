@@ -1,0 +1,13 @@
+.card + .card {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.navbar {
+    background-color: #343a40; /* tmavě šedá barva */
+}
+
+.card-title {
+    font-weight: bold;
+    font-style: italic;
+}
