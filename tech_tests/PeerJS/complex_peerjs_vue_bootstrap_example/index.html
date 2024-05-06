@@ -154,11 +154,11 @@
                 )
             },
             openInNewWindow(inTheWindow, isFirst, url, p1, p2) {
-                const pear_auto = p1.peerAutoRun ? 1 : 0;
+                const peer_auto = p1.peerAutoRun ? 1 : 0;
                 const conn_auto = p1.connectionAutoRun ? 1 : 0;
                 const is_first = isFirst ? 1 : 0;
                 const urlToOpen = `${url}?is_first=${is_first}&my_id=${p1.id}&partner_id=${p2.id}&name=${p1.name}`
-                    + `&pear_auto=${pear_auto}&conn_auto=${conn_auto}`
+                    + `&peer_auto=${peer_auto}&conn_auto=${conn_auto}`
                 // alert(urlToOpen);
                 if (inTheWindow) {
                     window.location.href = urlToOpen
