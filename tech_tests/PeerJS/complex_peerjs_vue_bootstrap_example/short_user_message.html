@@ -114,8 +114,7 @@
             if (this.peer && this.connectAuto) {
                 this.connect();
                 if (this.conn) {
-                    this.isConnected = true;
-                    this.status = `Connected to: ${this.conn.peer}`;
+                    this.afterConnection();
                 }
             }
 
@@ -126,7 +125,6 @@
                     this.conn = this.peer.connect(this.partnerId);
                     if (this.conn) {
                         this.handleConnection();
-
                     } else {
                         console.error('Connection failed to establish.');
                         this.status = 'Connection failed';
@@ -143,8 +141,7 @@
             },
             handleConnection() {
                 this.conn.on('open', () => {
-                    this.isConnected = true;
-                    this.status = `Connected to: ${this.conn.peer}`;
+                    this.afterConnection();
                 });
                 this.conn.on('data', (data) => {
                     // received data is a message
@@ -161,6 +158,10 @@
                     this.isConnected = false;
                     this.status = `Connection failed: ${err}`;
                 });
+            },
+            afterConnection() {
+                this.isConnected = true;
+                this.status = `Connected to: ${this.conn.peer}`;
             },
             storeMessage(messageObj) {
                 // store sent/received message
