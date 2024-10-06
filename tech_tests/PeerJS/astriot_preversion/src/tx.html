@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astriot - TX Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-custom {
+            background-color: #f8f9fa; /* Světlá barva pozadí */
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand img {
+            height: 24px;
+            margin-right: 8px;
+        }
+        .grid-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+    <div class="container-fluid justify-content-between">
+        <!--
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        -->
+        <a class="navbar-brand mx-auto" href="#">
+            <img src="../img/icon100x100.png" alt="Logo"> <!-- Ikona v logu -->
+        </a>
+        <div class="d-flex flex-grow-1 justify-content-center">
+            Astriot
+        </div>
+        <div class="ms-auto me-2 d-flex align-items-center">
+            <div id="connectionIndicator"
+                 style="width: 20px; height: 20px; border-radius: 50%; background-color: red; margin-right: 10px;">
+                <!-- Kruhový indikátor pro stav připojení -->
+            </div>
+            <span id="fpsDisplay" class="badge bg-primary">0 FPS</span>
+        </div>
+    </div>
+</nav>
+
+
+<div id="txApp" class="container grid-container">
+
+    <!-- Grid pro informace -->
+    <!-- Výběr kamery -->
+    <div class="row align-items-center mb-3">
+        <div class="col-auto">
+            <label class="form-label" for="cameraSelect">Select Camera:</label>
+        </div>
+        <div class="col-auto">
+            <select id="cameraSelect" class="form-select">
+                <!-- Možnosti kamer budou přidány dynamicky -->
+            </select>
+        </div>
+    </div>
+
+    <div class="row align-items-center mb-3">
+        <div class="col-auto">
+            <label class="form-label">Show Image:</label>
+        </div>
+        <div class="col-auto">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="showImageSwitch">
+                <label class="form-check-label" for="showImageSwitch"></label>
+            </div>
+        </div>
+        <div class="col" id="imagePreviewContainer" style="display: none;">
+            <canvas id="cameraCanvasPreview" class="border" style="width: 150px; height: 100px;"></canvas>
+        </div>
+    </div>
+
+    <div class="row align-items-center mb-3">
+        <div class="col-auto">
+            <label class="form-label">Odesílané zprávy:</label>
+        </div>
+        <div class="col">
+            <textarea id="statusLog" class="form-control" rows="3" readonly></textarea>
+        </div>
+    </div>
+
+    <!-- Video pro streamování z kamery (skryté) -->
+    <video id="cameraStream" autoplay playsinline style="display:none;"></video>
+</div>
+
+<script>
+    function logStatus(message) {
+        const statusLog = document.getElementById('statusLog');
+        statusLog.value += message + '\n';
+        statusLog.scrollTop = statusLog.scrollHeight; // Automatické posouvání na konec
+    }
+
+    const peer = new Peer('tx-fixed-id');  // Použití pevného ID pro TX peer
+    const targetPeerId = 'rx-fixed-id';  // Pevné ID pro přijímající peer (rx.html)
+
+    let messageCounter = 0;
+    let connection = null;
+    let frameCount = 0;
+    let selectedDeviceId = null;
+
+    // Funkce pro zobrazení FPS
+    function updateFPS() {
+        document.getElementById('fpsDisplay').textContent = frameCount + ' FPS';
+        frameCount = 0;  // Vynulování počítadla snímků po aktualizaci
+    }
+
+    // Nastavení intervalu pro aktualizaci FPS každou sekundu
+    setInterval(updateFPS, 1000);
+
+    // Získání seznamu kamer s konkrétními názvy
+    navigator.mediaDevices.getUserMedia({ video: true }) // Vyžádejte si přístup ke kameře, abyste získali názvy zařízení
+        .then(() => {
+        return navigator.mediaDevices.enumerateDevices();
+    })
+        .then(devices => {
+        const cameraSelect = document.getElementById('cameraSelect');
+        devices.forEach(device => {
+            if (device.kind === 'videoinput') {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Camera ${cameraSelect.length + 1}`;
+                cameraSelect.appendChild(option);
+            }
+        });
+    })
+        .catch(err => {
+        logStatus('Chyba při získávání zařízení: ' + err);
+    });
+
+    // Funkce pro přístup ke kameře
+    function startCamera() {
+        const constraints = {
+            video: {
+                deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined
+            }
+        };
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then((stream) => {
+            const video = document.getElementById('cameraStream');
+            video.srcObject = stream;
+
+            video.onloadedmetadata = () => {
+                // Zahájení zpracování rámců, jakmile je video připraveno
+                processFrame();
+            };
+        })
+            .catch((err) => {
+            logStatus('Chyba při přístupu ke kameře: ' + err);
+            document.getElementById('connectedSwitch').checked = false;
+        });
+    }
+
+    // Event listener pro změnu výběru kamery
+    document.getElementById('cameraSelect').addEventListener('change', (event) => {
+        selectedDeviceId = event.target.value;
+        startCamera();
+    });
+
+    function imgProcessor(imageData) {
+        // Počet bodů s červenou složkou R > 200
+        let count = 0;
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            if (r > 200) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function processFrame() {
+        if (connection && connection.open) {
+            const video = document.getElementById('cameraStream');
+            const canvas = document.getElementById('cameraCanvasPreview');
+            const context = canvas.getContext('2d');
+
+            // Nastavení velikosti plátna odpovídající velikosti videa
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Kreslení aktuálního rámce z videa na plátno
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Získání dat z plátna
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+            // Zpracování obrázku pomocí imgProcessor
+            const redCount = imgProcessor(imageData);
+
+            // Vytvoření datové zprávy
+            const t = new Date().getTime();  // Časové razítko ve strojovém tvaru
+            const data = { t, redCount, messageCounter };
+
+            // Odeslání zprávy přes PeerJS
+            connection.send(JSON.stringify(data));
+            logStatus('Odesláno: zpráva #' + messageCounter + ', t = ' + t + ', redCount = ' + redCount);
+            messageCounter++;
+
+            // Zvýšení počítadla snímků
+            frameCount++;
+
+            // Aktualizace náhledu obrázku, pokud je zapnut přepínač
+            if (document.getElementById('showImageSwitch').checked) {
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+            } else {
+                document.getElementById('imagePreviewContainer').style.display = 'none';
+            }
+
+            // Zpracování dalšího rámce
+            requestAnimationFrame(processFrame);
+        }
+    }
+
+    peer.on('open', (id) => {
+        logStatus('My peer ID is: ' + id);
+
+        // Pokus o připojení k RX peeru s pevným ID
+        connection = peer.connect(targetPeerId);
+
+        connection.on('open', () => {
+            logStatus('Connected to RX peer: ' + targetPeerId);
+
+            // Změna barvy indikátoru připojení na zelenou
+            document.getElementById('connectionIndicator').style.backgroundColor = 'green';
+
+            // Zahájení kamery po připojení
+            startCamera();
+        });
+
+        connection.on('error', (err) => {
+            console.error('Connection error:', err);
+            logStatus('Connection error: ' + err);
+
+            // Změna barvy indikátoru připojení na červenou
+            document.getElementById('connectionIndicator').style.backgroundColor = 'red';
+        });
+    });
+
+    peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        logStatus('Peer error: ' + err);
+
+        // Změna barvy indikátoru připojení na červenou
+        document.getElementById('connectionIndicator').style.backgroundColor = 'red';
+    });
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

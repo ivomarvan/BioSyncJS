@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RX Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-custom {
+            background-color: #f8f9fa; /* Světlá barva pozadí */
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand img {
+            height: 24px;
+            margin-right: 8px;
+        }
+        .grid-container {
+            margin-top: 20px;
+        }
+        .accordion-header {
+            position: relative;
+        }
+        .accordion-toggle-input {
+            margin-left: auto; /* Přepínač zarovnaný na pravý okraj */
+            margin-right: 15px; /* Odstup mezi přepínačem a pravým okrajem */
+            background-color: lightgray;
+        }
+        .accordion-toggle-input:checked {
+            background-color: green;
+        }
+        .accordion-body-readonly {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+    <div class="container-fluid justify-content-between">
+        <a class="navbar-brand mx-auto" href="#">
+            <img src="../img/icon100x100.png" alt="Logo"> <!-- Ikona v logu -->
+        </a>
+        <div class="d-flex flex-grow-1 justify-content-center">
+            Astriot
+        </div>
+        <div class="ms-auto me-2 d-flex align-items-center">
+            <div id="connectionIndicator"
+                 style="width: 20px; height: 20px; border-radius: 50%; background-color: red; margin-right: 10px;">
+                <!-- Kruhový indikátor pro stav připojení -->
+            </div>
+            <span id="fpsDisplay" class="badge bg-primary">0 FPS</span>
+        </div>
+    </div>
+</nav>
+
+<div id="rxApp" class="container grid-container">
+    <div class="accordion mb-3" id="accordionExample">
+
+        <!-- Accordion 1 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header d-flex align-items-center" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                        aria-expanded="true" aria-controls="collapseOne">
+                    Accordion Item #1
+                </button>
+                <div class="form-check form-switch ms-auto accordion-toggle">
+                    <input class="form-check-input accordion-toggle-input" type="checkbox" id="toggleOne"
+                           data-accordion="collapseOne">
+                </div>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne">
+                <div class="accordion-body">
+                    <!-- Obsah Accordionu 1 -->
+                    <div class="accordion-content">
+                        Toto je obsah prvního accordionu.
+                        <p>Lorem ipsum dolor sit amet...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accordion 2 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header d-flex align-items-center" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Accordion Item #2
+                </button>
+                <div class="form-check form-switch ms-auto accordion-toggle">
+                    <input class="form-check-input accordion-toggle-input" type="checkbox" id="toggleTwo"
+                           data-accordion="collapseTwo">
+                </div>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo">
+                <div class="accordion-body">
+                    <!-- Obsah Accordionu 2 -->
+                    <div class="accordion-content">
+                        Toto je obsah druhého accordionu.
+                        <p>Lorem ipsum dolor sit amet...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accordion 3 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header d-flex align-items-center" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    Accordion Item #3
+                </button>
+                <div class="form-check form-switch ms-auto accordion-toggle">
+                    <input class="form-check-input accordion-toggle-input" type="checkbox" id="toggleThree"
+                           data-accordion="collapseThree">
+                </div>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree">
+                <div class="accordion-body">
+                    <!-- Obsah Accordionu 3 -->
+                    <div class="accordion-content">
+                        Toto je obsah třetího accordionu.
+                        <p>Lorem ipsum dolor sit amet...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Oblast pro přijaté zprávy -->
+<div class="row align-items-center mb-3">
+    <div class="col">
+        <label class="form-label">Přijaté zprávy:</label>
+        <div id="dataDisplay" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc;">
+            <!-- Přijatá data se budou zobrazovat zde -->
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.accordion-toggle-input').forEach((toggle) => {
+        toggle.addEventListener('change', function() {
+            const targetAccordionId = this.getAttribute('data-accordion');
+            const targetAccordion = document.getElementById(targetAccordionId);
+            const targetHeader = this.closest('.accordion-header');
+            const targetContent = targetAccordion.querySelector('.accordion-content');
+
+            if (this.checked) {
+                // Nastavíme zelený okraj a obsah na read-only (zešedne)
+                targetHeader.style.border = '2px solid green';
+                targetContent.classList.add('accordion-body-readonly');
+                this.style.backgroundColor = 'green';
+
+                // Přepneme ostatní toggle na off
+                document.querySelectorAll('.accordion-toggle-input').forEach((otherToggle) => {
+                    if (otherToggle !== this) {
+                        otherToggle.checked = false;
+                        const otherAccordionId = otherToggle.getAttribute('data-accordion');
+                        const otherHeader = document.getElementById(otherAccordionId).closest('.accordion-item').querySelector('.accordion-header');
+                        const otherContent = document.getElementById(otherAccordionId).querySelector('.accordion-content');
+
+                        // Vrátíme zpět původní stav
+                        otherHeader.style.border = '';
+                        otherContent.classList.remove('accordion-body-readonly');
+                        otherToggle.style.backgroundColor = '';
+                    }
+                });
+            } else {
+                // Vrátíme zpět původní stav
+                targetHeader.style.border = '';
+                targetContent.classList.remove('accordion-body-readonly');
+                this.style.backgroundColor = '';
+            }
+        });
+    });
+</script>
+
+<script>
+    const peer = new Peer('rx-fixed-id');  // Použití pevného ID pro RX peer
+    let frameCount = 0;
+
+    // Funkce pro zobrazení FPS
+    function updateFPS() {
+        document.getElementById('fpsDisplay').textContent = frameCount + ' FPS';
+        frameCount = 0;  // Vynulování počítadla snímků po aktualizaci
+    }
+
+    // Nastavení intervalu pro aktualizaci FPS každou sekundu
+    setInterval(updateFPS, 1000);
+
+    peer.on('open', (id) => {
+        console.log('My peer ID is:', id);
+    });
+
+    peer.on('connection', (connection) => {
+        console.log('Connected to TX peer:', connection.peer);
+
+        // Změna barvy indikátoru připojení na zelenou po připojení
+        document.getElementById('connectionIndicator').style.backgroundColor = 'green';
+
+        connection.on('data', (data) => {
+            const parsedData = JSON.parse(data);
+            const receiveTime = new Date().getTime();
+            const delay = receiveTime - parsedData.t;  // Zpoždění v ms
+
+            $('#dataDisplay').append('<p>Zpráva #' + parsedData.messageCounter + ': t: ' + parsedData.t + ', redCount: ' + parsedData.redCount + ', zpoždění: ' + delay + ' ms</p>');
+            // Automatické posouvání na konec
+            $('#dataDisplay').scrollTop($('#dataDisplay')[0].scrollHeight);
+
+            // Zvýšení počítadla snímků
+            frameCount++;
+        });
+
+        connection.on('error', (err) => {
+            console.error('Connection error:', err);
+            // Změna barvy indikátoru připojení na červenou při chybě
+            document.getElementById('connectionIndicator').style.backgroundColor = 'red';
+        });
+    });
+
+    peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        // Změna barvy indikátoru připojení na červenou při chybě
+        document.getElementById('connectionIndicator').style.backgroundColor = 'red';
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
